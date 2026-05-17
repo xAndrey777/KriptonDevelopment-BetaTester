@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kriptón — Beta Program</title>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blur: 28px;
+      --glass-bg: rgba(255,255,255,0.18);
+      --glass-border: rgba(255,255,255,0.45);
+      --field-bg: rgba(255,255,255,0.22);
+      --field-focus: rgba(255,255,255,0.42);
+      --text: #1a0a0e;
+      --muted: #7a5560;
+      --accent: #e91e3e;
+      --accent2: #ff6b6b;
+      --success: #10b981;
+      --danger: #e91e3e;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Figtree', sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 20px 80px;
+      position: relative;
+      overflow-x: hidden;
+      background: #f5dde0;
+    }
+
+    /* ── Blobs animados ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.55;
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .b1 { width: 520px; height: 520px; background: #e91e3e; top: -120px; left: -80px; animation-delay: 0s; }
+    .b2 { width: 440px; height: 440px; background: #ff8a80; bottom: -80px; right: -60px; animation-delay: -4s; }
+    .b3 { width: 360px; height: 360px; background: #ff6b6b; top: 40%; left: 55%; animation-delay: -8s; }
+    .b4 { width: 300px; height: 300px; background: #ffcdd2; top: 55%; left: 5%;  animation-delay: -6s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.06); }
+    }
+
+    /* ── Glass mixin ── */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 8px 32px rgba(80,60,180,.10),
+        0 1.5px 0 rgba(255,255,255,0.7) inset,
+        0 -1px 0 rgba(255,255,255,0.15) inset;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 1;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 16px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+
+    .pill-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: blink 1.8s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
+    }
+
+    .logo {
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #b00020 0%, #e91e3e 50%, #ff6b6b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 600px;
+      border-radius: 28px;
+      padding: 40px 42px;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent);
+    }
+
+    /* ── Section labels ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 28px 0 18px;
+    }
+    .section-label:first-child { margin-top: 0; }
+    .section-label::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,.5), transparent);
+    }
+    .section-label span.num {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      background: rgba(233,30,62,.12);
+      color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 16px; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field label .req { color: var(--danger); }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--field-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 14px;
+      padding: 13px 17px;
+      font-family: 'Figtree', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      outline: none;
+      transition: background .2s, border-color .2s, box-shadow .2s;
+      box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 2px 6px rgba(80,60,180,.04);
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder { color: rgba(107,101,144,.5); }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      background: var(--field-focus);
+      border-color: rgba(233,30,62,.5);
+      box-shadow:
+        0 0 0 3px rgba(233,30,62,.12),
+        0 1px 0 rgba(255,255,255,.7) inset;
+    }
+
+    .field select { appearance: none; cursor: pointer; }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '⌄';
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none; font-size: 16px;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.6;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── Info chip ── */
+    .info-chip {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      background: rgba(233,30,62,.08);
+      border: 1px solid rgba(233,30,62,.18);
+      margin-bottom: 16px;
+    }
+    .info-chip .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .info-chip p { font-size: 13px; line-height: 1.6; color: var(--muted); }
+    .info-chip p strong { color: var(--accent); font-weight: 600; }
+
+    /* ── Terms ── */
+    .terms-box {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 0 rgba(255,255,255,.6) inset;
+    }
+
+    .terms-box ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+
+    .terms-box li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .terms-box li::before {
+      content: '◆';
+      color: var(--accent);
+      font-size: 7px;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .accept-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+    .accept-row input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .accept-row span { font-size: 13.5px; font-weight: 500; color: var(--text); }
+
+    /* ── Submit ── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 26px;
+      padding: 16px;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      font-family: 'Figtree', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, opacity .15s;
+      background: linear-gradient(135deg, #b00020 0%, #e91e3e 100%);
+      box-shadow: 0 4px 24px rgba(233,30,62,.35), 0 1px 0 rgba(255,255,255,.25) inset;
+    }
+
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -60%;
+      width: 50%; height: 200%;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,.28), transparent);
+      transform: skewX(-15deg);
+      transition: left .55s;
+    }
+    .btn-submit:hover::before { left: 130%; }
+    .btn-submit:hover { opacity: .93; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* ── Success ── */
+    #success-msg {
+      display: none;
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    .success-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e91e3e, #10b981);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 32px rgba(16,185,129,.3);
+      animation: pop .5s cubic-bezier(.34,1.56,.64,1) both;
+      color: white;
+    }
+
+    @keyframes pop {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    #success-msg h2 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    #success-msg p  { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      margin-top: 30px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 2px;
+      color: rgba(107,101,144,.55);
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 520px) {
+      .card { padding: 28px 20px; }
+      .row { grid-template-columns: 1fr; }
+      .logo { font-size: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
+
+  <header>
+    <div class="pill-badge glass">
+      <span class="dot"></span>
+      Beta Program · Abierto
+    </div>
+    <div class="logo">Kriptón</div>
+    <p>Aplica para ser parte de los primeros en probar el addon.<br/>Plazas limitadas.</p>
+  </header>
+
+  <div class="card glass">
+
+    <form id="appForm" action="https://formspree.io/f/xpqnzwae" method="POST">
+
+      <!-- DATOS -->
+      <div class="section-label"><span class="num">1</span> Datos personales</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Usuario de Minecraft <span class="req">*</span></label>
+          <input type="text" name="minecraft_user" placeholder="Steve" required />
+        </div>
+        <div class="field">
+          <label>Usuario de Discord <span class="req">*</span></label>
+          <input type="text" name="discord_user" placeholder="@usuario" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" name="email" placeholder="opcional, para notificaciones" />
+      </div>
+
+      <!-- EXPERIENCIA -->
+      <div class="section-label"><span class="num">2</span> Experiencia</div>
+
+      <div class="info-chip">
+        <span class="icon">🧪</span>
+        <p><strong>Kriptón está en fase beta temprana.</strong> Aún no hay módulos disponibles para probar, por lo que no se requiere experiencia previa con el addon. Lo que importa es tu disposición a reportar bugs.</p>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Tiempo usando Meteor Client <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select name="meteor_exp" required>
+              <option value="" disabled selected>Selecciona...</option>
+              <option value="menos1">Menos de 1 mes</option>
+              <option value="1-6">1 – 6 meses</option>
+              <option value="6-12">6 – 12 meses</option>
+              <option value="mas1">Más de 1 año</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Versión de Minecraft <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select name="mc_version" required>
+              <option value="" disabled selected>Selecciona...</option>
+              <option value="1.21.11">1.21.11</option>
+              <option value="1.21.8">1.21.8</option>
+              <option value="1.21.6">1.21.6</option>
+              <option value="otra">Otra</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>¿Sabes reportar bugs con logs? <span class="req">*</span></label>
+        <div class="select-wrap">
+          <select name="logs_exp" required>
+            <option value="" disabled selected>Selecciona...</option>
+            <option value="si">Sí, sé ubicar latest.log y crash reports</option>
+            <option value="basico">Sé lo básico pero puedo aprender</option>
+            <option value="no">No, pero estoy dispuesto/a a aprender</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- MOTIVACIÓN -->
+      <div class="section-label"><span class="num">3</span> Motivación</div>
+
+      <div class="field">
+        <label>¿Por qué quieres ser betatester? <span class="req">*</span></label>
+        <textarea name="motivation" placeholder="Cuéntanos qué te motiva a unirte al programa..." required></textarea>
+      </div>
+
+      <!-- TÉRMINOS -->
+      <div class="section-label"><span class="num">4</span> Términos</div>
+
+      <div class="terms-box">
+        <ul>
+          <li>No filtrarás builds privadas ni el código fuente del addon.</li>
+          <li>Reportarás activamente cualquier bug o comportamiento inesperado.</li>
+          <li>No compartirás el addon fuera del programa de beta.</li>
+          <li>Estarás disponible para probar nuevas versiones cuando se solicite.</li>
+          <li>El acceso puede ser revocado si no se cumplen estas condiciones.</li>
+        </ul>
+      </div>
+
+      <label class="accept-row">
+        <input type="checkbox" name="terms" value="aceptado" required />
+        <span>He leído y acepto los términos del programa beta de Kriptón.</span>
+      </label>
+
+      <button type="submit" class="btn-submit">Enviar solicitud →</button>
+
+    </form>
+
+    <div id="success-msg">
+      <div class="success-icon">✓</div>
+      <h2>¡Solicitud enviada!</h2>
+      <p>Revisaremos tu solicitud y te contactaremos<br/>por Discord si eres seleccionado/a.<br/><br/>Gracias por querer ser parte de Kriptón Beta.</p>
+    </div>
+
+  </div>
+
+  <footer>Kriptón Addon &nbsp;·&nbsp; Early Beta &nbsp;·&nbsp; Fabric 1.21.x</footer>
+
+  <script>
+    const form = document.getElementById('appForm');
+    const success = document.getElementById('success-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('.btn-submit');
+      btn.textContent = 'Enviando...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          form.style.display = 'none';
+          success.style.display = 'block';
+        } else {
+          btn.textContent = '¡Error! Intenta de nuevo';
+          btn.disabled = false;
+        }
+      } catch {
+        btn.textContent = '¡Error de red!';
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
